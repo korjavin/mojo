@@ -255,6 +255,12 @@ sub status_isnt {
   return $self->_test('isnt', $self->tx->res->code, $status, $desc);
 }
 
+sub subprotocol_is {
+  my ($self, $proto, $desc) = @_;
+  return $self->_test('is', $self->tx->subprotocol,
+    $proto, $desc || 'exact match for subprotocol');
+}
+
 sub text_is {
   my ($self, $selector, $value, $desc) = @_;
   $desc ||= encode 'UTF-8', qq{exact match for selector "$selector"};
@@ -842,6 +848,13 @@ Check response status for exact match.
   $t = $t->status_isnt(200, 'different status');
 
 Opposite of C<status_is>.
+
+=head2 subprotocol_is
+
+  $t = $t->subprotocol_is('v1.proto');
+  $t = $t->subprotocol_is('v1.proto', 'right protocol');
+
+Check WebSocket subprotocol for exact match.
 
 =head2 text_is
 

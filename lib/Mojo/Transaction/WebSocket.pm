@@ -2,6 +2,7 @@ package Mojo::Transaction::WebSocket;
 use Mojo::Base 'Mojo::Transaction';
 
 use Config;
+use List::Util 'first';
 use Mojo::JSON;
 use Mojo::Transaction::HTTP;
 use Mojo::Util qw(b64_encode decode encode sha1_bytes xor_encode);
@@ -260,6 +261,20 @@ sub server_write {
   }
 
   return delete $self->{write} // '';
+}
+
+sub subprotocol {
+  my $self = shift;
+
+  return $self->res->headers->sec_websocket_protocol if $self->masked;
+
+  return undef unless my $sub = $self->req->headers->sec_websocket_protocol;
+  for my $proto (split /,\s*/, $sub) {
+    next unless my $match = first { $proto eq $_ } @_;
+    $self->res->headers->sec_websocket_protocol($match);
+    return $match;
+  }
+  return undef;
 }
 
 sub _challenge { b64_encode(sha1_bytes(($_[0] || '') . GUID), '') }
@@ -648,6 +663,13 @@ Read data server-side, used to implement web servers.
   my $bytes = $ws->server_write;
 
 Write data server-side, used to implement web servers.
+
+=head2 subprotocol
+
+  my $proto = $ws->subprotocol;
+  my $proto = $ws->subprotocol('v1.foo', 'v2.foo');
+
+Negotiate WebSocket subprotocol and return C<undef> if negotiation failed.
 
 =head1 DEBUGGING
 

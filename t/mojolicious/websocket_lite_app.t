@@ -81,6 +81,13 @@ websocket '/once' => sub {
   );
 };
 
+websocket '/negotiate' => sub {
+  my $self = shift;
+  return $self->rendered(426)
+    unless my $proto = $self->tx->subprotocol('v2.echo', 'echo');
+  $self->on(message => sub { shift->send($proto . ': ' . shift) });
+};
+
 under '/nested';
 
 websocket sub {
@@ -112,7 +119,7 @@ $t->websocket_ok('/echo')->send_ok('hello again')
 
 # Custom header and protocols
 $t->websocket_ok('/echo' => {DNT => 1} => ['foo', 'bar', 'baz'])
-  ->header_is('Sec-WebSocket-Protocol' => 'foo')->send_ok('hello')
+  ->subprotocol_is('foo')->send_ok('hello')
   ->message_ok->message_is('echo: hello')->finish_ok;
 is $t->tx->req->headers->dnt, 1, 'right "DNT" value';
 is $t->tx->req->headers->sec_websocket_protocol, 'foo, bar, baz',
@@ -222,6 +229,20 @@ $t->websocket_ok('/once')->send_ok('hello')
   ->message_ok->message_is('ONE: hello')->message_ok->message_is('TWO: hello')
   ->send_ok('hello')->message_ok->message_is('ONE: hello')->send_ok('hello')
   ->message_ok->message_is('ONE: hello')->finish_ok;
+
+# Failed subprotocol negotiation
+my $tx = $t->ua->build_websocket_tx('/negotiate');
+$t->request_ok($tx)->status_is(426);
+$tx = $t->ua->build_websocket_tx('/negotiate' => ['v3.echo', 'v4.echo']);
+$t->request_ok($tx)->status_is(426);
+
+# Successful subprotocol negotiation
+$t->websocket_ok('/negotiate' => ['v3.echo', 'v2.echo'])
+  ->subprotocol_is('v2.echo')->send_ok('hello')
+  ->message_ok->message_is('v2.echo: hello')->finish_ok;
+$t->websocket_ok('/negotiate' => ['echo', 'v2.echo'])->subprotocol_is('echo')
+  ->send_ok('hello again')->message_ok->message_is('echo: hello again')
+  ->finish_ok;
 
 # Nested WebSocket
 $t->websocket_ok('/nested')->send_ok('hello')
