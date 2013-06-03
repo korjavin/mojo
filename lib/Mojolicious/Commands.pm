@@ -4,6 +4,7 @@ use Mojo::Base 'Mojolicious::Command';
 use Getopt::Long 'GetOptions';
 use List::Util 'max';
 use Mojo::Server;
+use Mojo::Util 'decode';
 
 has hint => <<"EOF";
 
@@ -60,6 +61,7 @@ sub run {
   $name = $self->detect($name) unless $ENV{MOJO_NO_DETECT};
 
   # Run command
+  @args = map { decode('UTF-8', $_) // $_ } @args;
   if ($name && $name =~ /^\w+$/ && ($name ne 'help' || $args[0])) {
 
     # Help

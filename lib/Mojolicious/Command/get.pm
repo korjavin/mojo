@@ -7,7 +7,7 @@ use Mojo::IOLoop;
 use Mojo::JSON;
 use Mojo::JSON::Pointer;
 use Mojo::UserAgent;
-use Mojo::Util qw(decode encode);
+use Mojo::Util 'decode';
 use Scalar::Util 'weaken';
 
 has description => "Perform HTTP request.\n";
@@ -47,7 +47,6 @@ sub run {
     'r|redirect'  => \my $redirect,
     'v|verbose'   => \my $verbose;
 
-  @args = map { decode 'UTF-8', $_ } @args;
   die $self->usage unless my $url = shift @args;
   my $selector = shift @args;
 
@@ -89,7 +88,6 @@ sub run {
   STDOUT->autoflush(1);
   my $tx = $ua->start($ua->build_tx($method, $url, \%headers, $content));
   my ($err, $code) = $tx->error;
-  $url = encode 'UTF-8', $url;
   warn qq{Problem loading URL "$url". ($err)\n} if $err && !$code;
 
   # JSON Pointer
@@ -106,10 +104,10 @@ sub _json {
   return unless my $data = $json->decode(shift);
   return unless defined($data = Mojo::JSON::Pointer->new->get($data, shift));
   return _say($data) unless ref $data eq 'HASH' || ref $data eq 'ARRAY';
-  say $json->encode($data);
+  say decode('UTF-8', $json->encode($data));
 }
 
-sub _say { say encode('UTF-8', $_[0]) if length $_[0] }
+sub _say { say $_[0] if length $_[0] }
 
 sub _select {
   my ($buffer, $selector, $charset, @args) = @_;

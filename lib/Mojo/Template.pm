@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use Carp 'croak';
 use Mojo::ByteStream;
 use Mojo::Exception;
-use Mojo::Util qw(decode encode monkey_patch slurp);
+use Mojo::Util qw(decode monkey_patch slurp);
 
 use constant DEBUG => $ENV{MOJO_TEMPLATE_DEBUG} || 0;
 
@@ -311,7 +311,7 @@ sub _wrap {
   $lines->[-1] .= "@{[$self->append]}; \$_M } };";
 
   my $code = join "\n", @$lines;
-  warn "-- Code for @{[$self->name]}\n@{[encode 'UTF-8', $code]}\n\n" if DEBUG;
+  warn "-- Code for @{[$self->name]}\n$code\n\n" if DEBUG;
   return $code;
 }
 

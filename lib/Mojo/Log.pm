@@ -3,14 +3,13 @@ use Mojo::Base 'Mojo::EventEmitter';
 
 use Carp 'croak';
 use Fcntl ':flock';
-use Mojo::Util 'encode';
 
 has handle => sub {
 
   # File
   if (my $path = shift->path) {
     croak qq{Can't open log file "$path": $!}
-      unless open my $file, '>>', $path;
+      unless open my $file, '>>:encoding(:UTF-8)', $path;
     return $file;
   }
 
@@ -63,7 +62,7 @@ sub _message {
 
   flock $handle, LOCK_EX;
   croak "Can't write to log: $!"
-    unless $handle->print(encode 'UTF-8', $self->format($level, @lines));
+    unless $handle->print($self->format($level, @lines));
   flock $handle, LOCK_UN;
 }
 
@@ -123,7 +122,7 @@ L<Mojo::Log> implements the following attributes.
   my $handle = $log->handle;
   $log       = $log->handle(IO::Handle->new);
 
-Log file handle used by default C<message> event, defaults to opening C<path>
+Log filehandle used by default C<message> event, defaults to opening C<path>
 or C<STDERR>.
 
 =head2 level

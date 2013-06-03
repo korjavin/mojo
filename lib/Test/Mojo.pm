@@ -13,7 +13,7 @@ use Mojo::JSON;
 use Mojo::JSON::Pointer;
 use Mojo::Server;
 use Mojo::UserAgent;
-use Mojo::Util qw(decode encode);
+use Mojo::Util 'decode';
 use Test::More ();
 
 has [qw(message tx)];
@@ -91,13 +91,13 @@ sub delete_ok { shift->_request_ok(delete => @_) }
 
 sub element_exists {
   my ($self, $selector, $desc) = @_;
-  $desc ||= encode 'UTF-8', qq{element for selector "$selector" exists};
+  $desc ||= qq{element for selector "$selector" exists};
   return $self->_test('ok', $self->tx->res->dom->at($selector), $desc);
 }
 
 sub element_exists_not {
   my ($self, $selector, $desc) = @_;
-  $desc ||= encode 'UTF-8', qq{no element for selector "$selector"};
+  $desc ||= qq{no element for selector "$selector"};
   return $self->_test('ok', !$self->tx->res->dom->at($selector), $desc);
 }
 
@@ -257,25 +257,25 @@ sub status_isnt {
 
 sub text_is {
   my ($self, $selector, $value, $desc) = @_;
-  $desc ||= encode 'UTF-8', qq{exact match for selector "$selector"};
+  $desc ||= qq{exact match for selector "$selector"};
   return $self->_test('is', $self->_text($selector), $value, $desc);
 }
 
 sub text_isnt {
   my ($self, $selector, $value, $desc) = @_;
-  $desc ||= encode 'UTF-8', qq{no match for selector "$selector"};
+  $desc ||= qq{no match for selector "$selector"};
   return $self->_test('isnt', $self->_text($selector), $value, $desc);
 }
 
 sub text_like {
   my ($self, $selector, $regex, $desc) = @_;
-  $desc ||= encode 'UTF-8', qq{similar match for selector "$selector"};
+  $desc ||= qq{similar match for selector "$selector"};
   return $self->_test('like', $self->_text($selector), $regex, $desc);
 }
 
 sub text_unlike {
   my ($self, $selector, $regex, $desc) = @_;
-  $desc ||= encode 'UTF-8', qq{no similar match for selector "$selector"};
+  $desc ||= qq{no similar match for selector "$selector"};
   return $self->_test('unlike', $self->_text($selector), $regex, $desc);
 }
 
@@ -297,8 +297,7 @@ sub websocket_ok {
   );
   Mojo::IOLoop->start;
 
-  my $desc = encode 'UTF-8', "WebSocket $url";
-  return $self->_test('ok', $self->tx->res->code eq 101, $desc);
+  return $self->_test('ok', $self->tx->res->code eq 101, "WebSocket $url");
 }
 
 sub _get_content {
@@ -340,7 +339,7 @@ sub _request_ok {
   local $Test::Builder::Level = $Test::Builder::Level + 1;
   my ($err, $code) = $self->tx->error;
   Test::More::diag $err if !(my $ok = !$err || $code) && $err;
-  return $self->_test('ok', $ok, encode('UTF-8', "@{[uc $method]} $url"));
+  return $self->_test('ok', $ok, "@{[uc $method]} $url");
 }
 
 sub _test {

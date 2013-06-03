@@ -11,6 +11,9 @@ use Carp ();
 # Only Perl 5.14+ requires it on demand
 use IO::Handle ();
 
+# Default to UTF-8
+binmode $_, ':encoding(UTF-8)' for *STDIN, *STDOUT, *STDERR;
+
 sub import {
   my $class = shift;
   return unless my $flag = shift;
@@ -166,6 +169,9 @@ All three forms save a lot of typing.
   push @ISA, 'SomeBaseClass';
   use Mojo::Base;
   sub has { Mojo::Base::attr(__PACKAGE__, @_) }
+
+The default encoding of the filehandles C<STDIN>, C<STDOUT> and C<STDERR> will
+also be set C<UTF-8> the first time L<Mojo::Base> is loaded.
 
 =head1 FUNCTIONS
 
