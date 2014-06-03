@@ -95,11 +95,15 @@ sub extract_start_line {
   my ($self, $bufref) = @_;
 
   # We have a full response line
-  return undef unless defined(my $line = get_line $bufref);
-  $self->error('Bad response start line') and return undef
-    unless $line =~ m!^\s*HTTP/(\d\.\d)\s+(\d\d\d)\s*(.+)?$!;
-  $self->content->skip_body(1) if $self->code($2)->is_empty;
-  return !!$self->version($1)->message($3)->content->auto_relax(1);
+  return undef unless $$bufref =~ s/^(.*?)\x0d?\x0a//;
+  $self->error({message => 'Bad response start line'}) and return undef
+    unless $1 =~ m!^\s*HTTP/(\d\.\d)\s+(\d\d\d)\s*(.+)?$!;
+
+  my $content = $self->content;
+  $content->skip_body(1) if $self->code($2)->is_empty;
+  $content->auto_relax(1) unless defined $content->auto_relax;
+  $content->expect_close(1) if $1 eq '1.0';
+  return !!$self->version($1)->message($3);
 }
 
 sub fix_headers {

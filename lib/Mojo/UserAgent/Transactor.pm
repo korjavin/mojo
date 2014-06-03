@@ -59,9 +59,10 @@ sub proxy_connect {
   my $upgrade = lc($req->headers->upgrade // '');
   return undef unless $upgrade eq 'websocket' || $url->protocol eq 'https';
 
-  # CONNECT request
+  # CONNECT request (expect a bad response)
   my $new = $self->tx(CONNECT => $url->clone->userinfo(undef));
   $new->req->proxy($proxy);
+  $new->res->content->auto_relax(0);
 
   return $new;
 }
